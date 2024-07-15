@@ -1,33 +1,102 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useState } from 'react'
+import { useAuth0 } from "@auth0/auth0-react";
+import axios from "axios";
 import './App.css'
 
+const useAuth0Token = () => {
+  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
+  const [accessToken, setAccessToken] = useState("");
+
+  useEffect(() => {
+    const fetchToken = async () => {
+      setAccessToken(await getAccessTokenSilently())
+    };
+
+    if (isAuthenticated) {
+      fetchToken();
+    }
+  }, [isAuthenticated]);
+
+  return accessToken;
+};
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [message, setMessage] = useState("");
+  const {
+    loginWithRedirect,
+    isAuthenticated,
+    logout,
+    user,
+  } = useAuth0();
+  const token = useAuth0Token();
+
+  const onPublicAPICall = async () => {
+    const response = await axios({
+      url: `${import.meta.env.VITE_API_BASE_URL}/api/public`,
+      method: "GET",
+      headers: {
+        "content-type": "application/json",
+      },
+    });
+    setMessage(JSON.stringify(response.data));
+  };
+
+  const onPrivateAPICall = async () => {
+    const response = await axios({
+      url: `${import.meta.env.VITE_API_BASE_URL}/api/private`,
+      method: "GET",
+      headers: {
+        "content-type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    setMessage(JSON.stringify(response.data));
+  };
+
+  const onPrivateRBACAPICall = async () => {
+    const response = await axios({
+      url: `${import.meta.env.VITE_API_BASE_URL}/api/privaterbac`,
+      method: "GET",
+      headers: {
+        "content-type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    setMessage(JSON.stringify(response.data));
+  };
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
+      <h1>Auth0 + Vite + React</h1>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+        <button onClick={() => loginWithRedirect()} disabled={ isAuthenticated }>
+          { isAuthenticated ? "ログイン済み" : "ログイン" }
         </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <div className="card">
+        {isAuthenticated && (
+          <p>{ user?.name }さん、ようこそ</p>
+        )}
+        {isAuthenticated && (
+          <button onClick={() => 
+            logout({
+              logoutParams: {
+                returnTo: window.location.origin,
+              }
+            })
+          }>
+            ログアウト
+          </button>
+        )}
+      </div>
+      <div className="card">
+        <button onClick={() => onPublicAPICall()}>Public API</button>
+        <button onClick={() => onPrivateAPICall()}>Private API</button>
+        <button onClick={() => onPrivateRBACAPICall()}>Private RBAC API</button>
+      </div>
+      <div className="card">
+        { message }
+      </div>
     </>
   )
 }
