@@ -31,6 +31,7 @@ function App() {
   const token = useAuth0Token();
 
   const onPublicAPICall = async () => {
+    setMessage("");
     const response = await axios({
       url: `${import.meta.env.VITE_API_BASE_URL}/api/public`,
       method: "GET",
@@ -42,6 +43,7 @@ function App() {
   };
 
   const onPrivateAPICall = async () => {
+    setMessage("");
     const response = await axios({
       url: `${import.meta.env.VITE_API_BASE_URL}/api/private`,
       method: "GET",
@@ -54,6 +56,7 @@ function App() {
   };
 
   const onPrivateRBACAPICall = async () => {
+    setMessage("");
     const response = await axios({
       url: `${import.meta.env.VITE_API_BASE_URL}/api/privaterbac`,
       method: "GET",

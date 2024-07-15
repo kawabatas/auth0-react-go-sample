@@ -1,6 +1,9 @@
 # auth0-react-go-sample
 Auth0 + React + Go sample code
 
+- フロントエンド React で認証
+- バックエンド Go で認可
+
 # Auth0でやること
 ### 0. Auth0 のアカウント作成
 ### 1. Applications を作成
